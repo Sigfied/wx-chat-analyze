@@ -6,8 +6,6 @@ import duckdb
 import jieba
 import pandas as pd
 
-from lib.words import filter_words
-
 period_mapping = {
     'Month': 'M',
     'Year': 'Y',
@@ -82,24 +80,44 @@ def aggregation_chats(df,
 
 
 # 定义一个函数，用于分词并统计词频
-def get_keywords(texts, top_n=10):
+def get_keywords(texts,
+                 min_length=3, max_length=7,
+                 top_n=10,
+                 stopword_file='./lib/stopwords_hit_modified.txt'
+                 ):
+    try:
+        with open(f'{stopword_file}', 'r', encoding='utf-8') as f1:
+            stop_words = set(f1.read().splitlines())
+    except FileNotFoundError:
+        print(f"停顿词文件异常,停顿词使用空数组")
+        stop_words = set()
+
     # 合并所有文本
     combined_text = " ".join(texts)
     # 使用 jieba 分词
     words = jieba.lcut(combined_text)
     # 过滤掉停用词和单字词，并控制词语长度
-    min_length = 3  # 最小长度
-    max_length = 7  # 最大长度
     # 过滤掉停用词和单字词
-    words = [w for w in words if min_length <= len(w) <= max_length and w not in filter_words]
+    words = [w for w in words if min_length <= len(w) <= max_length and w not in stop_words]
     # 统计词频
     word_counts = Counter(words)
     # 返回词频最高的 top_n 个词
     return word_counts.most_common(top_n)
 
 
-def hot_topic_top_n(top_n=15, csv_file_path='./lib/group_chats.csv', result_path='./result/monthly_keywords.csv',
+def hot_topic_top_n(top_n=15, min_length=3, max_length=7, csv_file_path='./lib/merged_group_chat.csv',
+                    result_path='./result/monthly_keywords.csv',
                     agg_model: AggregationModel = 'Month'):
+    """
+    获取年度，月度聊天的关键词(热词)
+    :param top_n: 关键词的个数
+    :param min_length: 关键词的最小长度
+    :param max_length: 关键词的最大长度
+    :param csv_file_path: 聊天记录的 CSV 文件路径
+    :param result_path: 生成的结果 CSV 文件路径
+    :param agg_model: 聚合条件 AggregationModel
+    :return:
+    """
     path = Path(result_path)
     # 检查路径是否存在，如果不存在则创建
     if not path.exists():
@@ -113,7 +131,7 @@ def hot_topic_top_n(top_n=15, csv_file_path='./lib/group_chats.csv', result_path
     monthly_keywords = {}
     for month, group in grouped:
         texts = group['StrContent'].tolist()
-        keywords = get_keywords(texts, top_n)
+        keywords = get_keywords(texts, top_n=top_n, min_length=min_length, max_length=max_length)
         monthly_keywords[month] = keywords
 
     (pd.DataFrame(monthly_keywords)
