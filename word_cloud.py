@@ -8,11 +8,12 @@ from wordcloud import WordCloud, STOPWORDS
 
 import lib.words
 
+# noinspection SqlDialectInspection
 duckdb.sql(
     """
 with
     exclude_words as (
-                     select distinct Remark as word from read_csv('/Users/hcm-b0494/Desktop/chats/group_chats.csv')
+                     select distinct Remark as word from read_csv('.lib/group_chats.csv')
                      )
   , chats as (
                    select TalkerId,
