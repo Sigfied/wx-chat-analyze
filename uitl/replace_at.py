@@ -3,7 +3,7 @@ import re
 import pandas as pd
 
 # 读取 CSV 文件
-file_path = './lib/group_chats.csv'
+file_path = '../lib/group_chats.csv'
 df = pd.read_csv(file_path)
 
 

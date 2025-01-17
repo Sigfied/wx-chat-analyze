@@ -2,7 +2,7 @@ import pandas as pd
 
 # 读取两个 CSV 文件
 df1 = pd.read_csv('./lib/group_chat_1.csv')
-df2 = pd.read_csv('./lib/group_chats.csv')
+df2 = pd.read_csv('../lib/group_chats.csv')
 
 # 假设时间列的名称为 'timestamp'，将其转换为 datetime 类型
 df1['d_timestamp'] = pd.to_datetime(df1['StrTime'])

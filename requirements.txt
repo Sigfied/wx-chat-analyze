@@ -240,3 +240,5 @@ wordcloud==1.9.4
 wrapt==1.16.0
 zipp @ file:///home/conda/feedstock_root/build_artifacts/zipp_1726248574750/work
 zstandard @ file:///Users/builder/cbouss/perseverance-python-buildout/croot/zstandard_1699238791645/work
+
+pandas~=2.2.2
