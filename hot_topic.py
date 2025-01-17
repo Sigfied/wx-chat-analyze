@@ -107,9 +107,12 @@ def get_keywords(texts,
 
 def hot_topic_top_n(top_n=15, min_length=3, max_length=7, csv_file_path='./lib/merged_group_chat.csv',
                     result_path='./result/monthly_keywords.csv',
-                    agg_model: AggregationModel = 'Month'):
+                    agg_model: AggregationModel = 'Month',
+                    stopword_file='./input/stopwords_hit.txt'
+                    ):
     """
     获取年度，月度聊天的关键词(热词)
+    :param stopword_file:
     :param top_n: 关键词的个数
     :param min_length: 关键词的最小长度
     :param max_length: 关键词的最大长度
@@ -131,7 +134,8 @@ def hot_topic_top_n(top_n=15, min_length=3, max_length=7, csv_file_path='./lib/m
     monthly_keywords = {}
     for month, group in grouped:
         texts = group['StrContent'].tolist()
-        keywords = get_keywords(texts, top_n=top_n, min_length=min_length, max_length=max_length)
+        keywords = get_keywords(texts, top_n=top_n, min_length=min_length, max_length=max_length,
+                                stopword_file=stopword_file)
         monthly_keywords[month] = keywords
 
     (pd.DataFrame(monthly_keywords)
@@ -139,4 +143,6 @@ def hot_topic_top_n(top_n=15, min_length=3, max_length=7, csv_file_path='./lib/m
      .to_csv(result_path, encoding='utf-8'))
 
 
-hot_topic_top_n(agg_model='Month', csv_file_path='./lib/merged_group_chat.csv')
+if __name__ == '__main__':
+    hot_topic_top_n(agg_model='Month', csv_file_path='./lib/merged_group_chat.csv',
+                    stopword_file='./lib/stopwords_hit_modified.txt')

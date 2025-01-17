@@ -15,4 +15,11 @@ GitHub地址：[LC044/WeChatMsg: 提取微信聊天记录，将其导出成HTML�
 
 
 ## 
-``monthly_topic.py`` 里的filter_words为自定义的停顿词
+``input/stopwords_hit`` 为自定义的停顿词，可以通过增加停顿词来调试出现的关键词
+
+## 使用
+```shell
+pip install -r requirements.txt
+```
+
+``hot_topic.py`` 可以根据聊天记录生成相应的年度，季度，月度热词
