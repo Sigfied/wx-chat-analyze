@@ -7,6 +7,10 @@ file_path = '../lib/group_chats.csv'
 df = pd.read_csv(file_path)
 
 
+def replace_remark():
+    df['Remark'] = df['Remark'].map({
+    })
+
 # 定义替换函数
 def remove_at_content(text, remarks):
     """
@@ -36,3 +40,4 @@ df.to_csv(output_path, index=False, encoding='utf-8')
 # 打印处理后的数据
 print("\n处理后的数据：")
 print(df.head())
+

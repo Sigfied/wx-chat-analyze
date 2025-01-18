@@ -21,30 +21,40 @@ with chats as (select
                       StrContent,
                       StrTime,
                       Remark,
+                      Type as MsgType,
                       CASE
                           WHEN cast(StrTime as TIME) BETWEEN '00:00:00' AND '06:00:00'
                               THEN cast(StrTime as timestamp) - INTERVAL '1' DAY
                           ELSE cast(StrTime as timestamp)
                           END
-                          AS adjusted_timestamp,
+                          AS adjusted_timestamp
                from read_csv('{chats_csv_file}')
-               where Type = 1)
+               where Remark is not null and Remark <> ''
+            )
 
    , min_chat_time as (select Remark,
                               min(StrTime)                                   as MinStrTime,
                               count(*)                                       as chat_nums,
                               DATEDIFF('day', MinStrTime, CURRENT_TIMESTAMP) AS days_diff
                        from chats
+                       where MsgType = 1
                        group by Remark)
 
-   , min_chat_content as (select min_chat_time.Remark,
+   , min_chat_content as (
+                          select Remark,EarliestContent,MinStrTime,chat_nums,days_diff
+                            from (
+                            select min_chat_time.Remark,
                                  chats.StrContent as EarliestContent,
                                  min_chat_time.MinStrTime,
                                  min_chat_time.chat_nums,
-                                 min_chat_time.days_diff
+                                 min_chat_time.days_diff,
+                                 ROW_NUMBER() OVER (PARTITION BY min_chat_time.Remark ORDER BY chats.StrContent DESC) AS rank
                           from min_chat_time
-                                   left join chats on min_chat_time.Remark = chats.Remark
+                                   left join chats on min_chat_time.Remark = chats.Remark and chats.MsgType = 1
                               and min_chat_time.MinStrTime = chats.StrTime)
+                            where rank = 1
+                              )
+                              
 
    , sum_chat_date as (select Remark, max_chat_date, max_chat_date_chats
                        from (SELECT Remark,
@@ -65,8 +75,8 @@ with chats as (select
                              where rank = 1)
 
    , share_chats as (select Remark, count(*) as share_counts
-                     from read_csv('{chats_csv_file}')
-                     where Type not in (
+                     from chats
+                     where MsgType not in (
                                         10000, 49, 1
                          )
                      group by Remark)
@@ -92,27 +102,17 @@ from min_chat_content
          left join share_chats on min_chat_content.Remark = share_chats.Remark
     """
     ).to_csv(tmp + '/temp-2.csv', encoding='utf-8')
-    df = pd.read_csv(tmp + '/temp-2.csv')
-    return df
+    return pd.read_csv(tmp + '/temp-2.csv')
 
 
 def wx_remarks(chats_csv_file='./lib/merged_group_chat.csv'):
     return duckdb.sql(f"""
-     select Remark,
-          min(StrTime)                                   as MinStrTime,
-          count(*)                                       as chat_nums,
-          DATEDIFF('day', MinStrTime, CURRENT_TIMESTAMP) AS days_diff
+     select 
+        *
    from read_csv('{chats_csv_file}')
-   group by Remark
     """).df()
 
 
-# wx_report('./lib/merged_group_chat_rename.csv')select Remark,
-#                               min(StrTime)                                   as MinStrTime,
-#                               count(*)                                       as chat_nums,
-#                               DATEDIFF('day', MinStrTime, CURRENT_TIMESTAMP) AS days_diff
-#                        from chats
-#                        group by Remark
-
-df = wx_remarks(chats_csv_file='./lib/merged_group_chat_rename.csv')
+df = wx_report('./lib/merged_group_chat_rename.csv')
 print(df)
+df.to_csv('./result/report.csv', encoding='utf-8')
